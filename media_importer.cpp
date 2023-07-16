@@ -33,17 +33,14 @@ bool MediaImporter::open(int width, int height) {
     _last_video_frame =
         new media_base::RawVideoFrame(media_base::PixelFormat::PixelFormatYUV420P, width, height);
 
-    FILE *fp = fopen("/home/tbago/media_resource/output.yuv", "rb");
     int y_frame_data_size = width * height;
     int8_t *y_frame_data = (int8_t *)malloc(y_frame_data_size);
+    memset(y_frame_data, 255, y_frame_data_size);
 
     int uv_frame_size = width * height / 2;
     int8_t *uv_frame_data = (int8_t *)malloc(uv_frame_size);
 
     int seek_pos = (y_frame_data_size + uv_frame_size) * 30;
-    fseek(fp, seek_pos, SEEK_SET);
-
-    fread(y_frame_data, 1, y_frame_data_size, fp);
 
     _last_video_frame->PushFrameData(width, y_frame_data);
 
@@ -52,7 +49,6 @@ bool MediaImporter::open(int width, int height) {
     _last_video_frame->PushFrameData(width, uv_frame_data);
     _last_video_frame->PushFrameData(width, uv_frame_data);
 
-    fclose(fp);
     _width = width;
     _height = height;
     return true;
@@ -85,13 +81,13 @@ void MediaImporter::decode_compressed_frame() {
         int size = recvfrom(_sock_fd, buffer, kMaxDataSize, MSG_WAITALL,
                             (struct sockaddr *)&serveraddr, &len);
 
-        std::cout << "receive data size : " << size << std::endl;
-        //first byte is index
-        size -= 1;
-        int8_t index = buffer[0];
+        //first two byte is index
+        int16_t index = buffer[0] + ((int16_t)buffer[1] * 128);
+        //std::cout << "receive data size : " << size << " index : " << index << std::endl;
 
+        size -= 2;
         int y_frame_index = index * size;
-        memcpy(y_frame_data + y_frame_index, buffer + 1, size - 1);
+        memcpy(y_frame_data + y_frame_index, buffer + 2, size);
         //receive one frame complete
         if (y_frame_index == frame_data_size - size) {
             {
