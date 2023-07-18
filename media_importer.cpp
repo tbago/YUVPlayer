@@ -37,7 +37,7 @@ bool MediaImporter::open(int width, int height) {
     int8_t *y_frame_data = (int8_t *)malloc(y_frame_data_size);
     memset(y_frame_data, 255, y_frame_data_size);
 
-    int uv_frame_size = width * height / 2;
+    int uv_frame_size = width * height / 4;
     int8_t *uv_frame_data = (int8_t *)malloc(uv_frame_size);
 
     int seek_pos = (y_frame_data_size + uv_frame_size) * 30;
@@ -46,8 +46,8 @@ bool MediaImporter::open(int width, int height) {
 
     //fread(uv_frame_data, 1, uv_frame_size / 2, fp);
     memset(uv_frame_data, 128, uv_frame_size);
-    _last_video_frame->PushFrameData(width, uv_frame_data);
-    _last_video_frame->PushFrameData(width, uv_frame_data);
+    _last_video_frame->PushFrameData(width / 2, uv_frame_data);
+    _last_video_frame->PushFrameData(width / 2, uv_frame_data);
 
     _width = width;
     _height = height;
